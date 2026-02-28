@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Resume -> DOCX Template Automation</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>AI Resume -> DOCX Template Automation</h1>
+
+      <section class="card">
+        <h2>1) Upload Resume</h2>
+        <input id="resume" type="file" accept=".pdf,.docx" />
+        <button id="parseBtn" type="button">Extract & Preview</button>
+      </section>
+
+      <section class="card">
+        <h2>2) Upload Template (.docx)</h2>
+        <input id="template" type="file" accept=".docx" />
+        <p class="hint">
+          Template placeholders should be bracket tags like <code>[NAME]</code>, <code>[EXPERIENCE]</code>.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>3) Edit Extracted JSON (optional)</h2>
+        <textarea id="jsonPreview" spellcheck="false" rows="14" placeholder="Click 'Extract & Preview' first..."></textarea>
+        <div class="row">
+          <button id="formatBtn" type="button">Generate DOCX</button>
+          <button id="clearBtn" type="button" class="secondary">Clear</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Errors</h2>
+        <pre id="errorBox" class="error"></pre>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
+

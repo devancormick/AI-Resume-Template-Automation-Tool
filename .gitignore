@@ -1,0 +1,8 @@
+node_modules
+dist
+uploads/
+templates/*.docx
+.env
+*.log
+jd.md
+plan.md
