@@ -2,11 +2,16 @@ const $ = (id) => document.getElementById(id);
 
 const resumeInput = $("resume");
 const templateInput = $("template");
+const resumeDrop = $("resumeDrop");
+const templateDrop = $("templateDrop");
 const parseBtn = $("parseBtn");
 const formatBtn = $("formatBtn");
 const clearBtn = $("clearBtn");
 const jsonPreview = $("jsonPreview");
 const errorBox = $("errorBox");
+
+let resumeFile = null;
+let templateFile = null;
 
 function setError(msg) {
   errorBox.textContent = msg || "";
@@ -22,17 +27,65 @@ function getFilenameFromContentDisposition(contentDisposition) {
   return match?.[1] ?? null;
 }
 
+function setupFileDrop(params) {
+  const { dropEl, inputEl, onFile } = params;
+  const defaultText = dropEl.textContent;
+
+  dropEl.addEventListener("click", () => inputEl.click());
+  dropEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      inputEl.click();
+    }
+  });
+
+  inputEl.addEventListener("change", () => {
+    const file = inputEl.files?.[0] ?? null;
+    onFile(file, defaultText);
+  });
+
+  dropEl.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropEl.classList.add("over");
+  });
+  dropEl.addEventListener("dragleave", () => dropEl.classList.remove("over"));
+  dropEl.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropEl.classList.remove("over");
+    const file = e.dataTransfer.files?.[0] ?? null;
+    if (!file) return;
+    onFile(file, defaultText);
+  });
+}
+
+setupFileDrop({
+  dropEl: resumeDrop,
+  inputEl: resumeInput,
+  onFile: (file, defaultText) => {
+    resumeFile = file;
+    resumeDrop.textContent = file ? `Selected: ${file.name}` : defaultText;
+  }
+});
+
+setupFileDrop({
+  dropEl: templateDrop,
+  inputEl: templateInput,
+  onFile: (file, defaultText) => {
+    templateFile = file;
+    templateDrop.textContent = file ? `Selected: ${file.name}` : defaultText;
+  }
+});
+
 parseBtn.addEventListener("click", async () => {
   setError("");
   try {
-    const file = resumeInput.files?.[0];
-    if (!file) {
+    if (!resumeFile) {
       setError("Please upload a resume (.pdf or .docx).");
       return;
     }
 
     const form = new FormData();
-    form.append("resume", file);
+    form.append("resume", resumeFile);
 
     parseBtn.disabled = true;
     const resp = await fetch("/api/parse", { method: "POST", body: form });
@@ -51,7 +104,6 @@ parseBtn.addEventListener("click", async () => {
 formatBtn.addEventListener("click", async () => {
   setError("");
   try {
-    const templateFile = templateInput.files?.[0];
     if (!templateFile) {
       setError("Please upload a .docx template.");
       return;
@@ -100,5 +152,10 @@ clearBtn.addEventListener("click", () => {
   setError("");
   jsonPreview.value = "";
   resumeInput.value = "";
+  templateInput.value = "";
+  resumeFile = null;
+  templateFile = null;
+  resumeDrop.textContent = "Drop resume here (PDF/DOCX) or click to choose";
+  templateDrop.textContent = "Drop DOCX template here or click to choose";
 });
 

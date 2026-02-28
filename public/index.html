@@ -12,13 +12,19 @@
 
       <section class="card">
         <h2>1) Upload Resume</h2>
-        <input id="resume" type="file" accept=".pdf,.docx" />
+        <div id="resumeDrop" class="dropzone" role="button" tabindex="0">
+          Drop resume here (PDF/DOCX) or click to choose
+        </div>
+        <input id="resume" class="hidden" type="file" accept=".pdf,.docx" />
         <button id="parseBtn" type="button">Extract & Preview</button>
       </section>
 
       <section class="card">
         <h2>2) Upload Template (.docx)</h2>
-        <input id="template" type="file" accept=".docx" />
+        <div id="templateDrop" class="dropzone" role="button" tabindex="0">
+          Drop DOCX template here or click to choose
+        </div>
+        <input id="template" class="hidden" type="file" accept=".docx" />
         <p class="hint">
           Template placeholders should be bracket tags like <code>[NAME]</code>, <code>[EXPERIENCE]</code>.
         </p>

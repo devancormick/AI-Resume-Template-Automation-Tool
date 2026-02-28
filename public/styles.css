@@ -65,3 +65,24 @@ button.secondary {
   background: #f3f4f6;
 }
 
+.hidden {
+  display: none;
+}
+
+.dropzone {
+  border: 2px dashed #9ca3af;
+  border-radius: 12px;
+  padding: 14px;
+  background: #ffffff;
+  margin: 10px 0 12px;
+  color: #374151;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dropzone.over {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
