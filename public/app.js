@@ -7,14 +7,23 @@ const templateDrop = $("templateDrop");
 const parseBtn = $("parseBtn");
 const formatBtn = $("formatBtn");
 const clearBtn = $("clearBtn");
+const saveSettingsBtn = $("saveSettingsBtn");
 const jsonPreview = $("jsonPreview");
 const errorBox = $("errorBox");
+const settingsStatus = $("settingsStatus");
+const openaiApiKeyInput = $("openaiApiKey");
+const groqApiKeyInput = $("groqApiKey");
+const openrouterApiKeyInput = $("openrouterApiKey");
 
 let resumeFile = null;
 let templateFile = null;
 
 function setError(msg) {
   errorBox.textContent = msg || "";
+}
+
+function setSettingsStatus(msg) {
+  settingsStatus.textContent = msg || "";
 }
 
 function tryParseJson(text) {
@@ -25,6 +34,25 @@ function getFilenameFromContentDisposition(contentDisposition) {
   if (!contentDisposition) return null;
   const match = contentDisposition.match(/filename="?([^"]+)"?/i);
   return match?.[1] ?? null;
+}
+
+function buildProviderSummary(providers) {
+  return [
+    `OpenAI: ${providers?.openai ? "configured" : "not configured"}`,
+    `Groq: ${providers?.groq ? "configured" : "not configured"}`,
+    `OpenRouter: ${providers?.openrouter ? "configured" : "not configured"}`
+  ].join("\n");
+}
+
+async function loadSettingsSummary() {
+  const resp = await fetch("/api/settings");
+  const payload = await resp.json();
+
+  if (!resp.ok) {
+    throw new Error(payload?.error || "Could not load provider settings.");
+  }
+
+  setSettingsStatus(buildProviderSummary(payload.providers));
 }
 
 function setupFileDrop(params) {
@@ -73,6 +101,42 @@ setupFileDrop({
   onFile: (file, defaultText) => {
     templateFile = file;
     templateDrop.textContent = file ? `Selected: ${file.name}` : defaultText;
+  }
+});
+
+saveSettingsBtn.addEventListener("click", async () => {
+  setError("");
+  setSettingsStatus("Validating provider keys...");
+
+  try {
+    saveSettingsBtn.disabled = true;
+
+    const resp = await fetch("/api/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        openaiApiKey: openaiApiKeyInput.value,
+        groqApiKey: groqApiKeyInput.value,
+        openrouterApiKey: openrouterApiKeyInput.value
+      })
+    });
+
+    const payload = await resp.json();
+    if (!resp.ok) {
+      throw new Error(payload?.error || "Could not save provider settings.");
+    }
+
+    openaiApiKeyInput.value = "";
+    groqApiKeyInput.value = "";
+    openrouterApiKeyInput.value = "";
+    setSettingsStatus(`Saved successfully.\n${buildProviderSummary(payload.providers)}`);
+  } catch (e) {
+    setSettingsStatus("");
+    setError(e instanceof Error ? e.message : String(e));
+  } finally {
+    saveSettingsBtn.disabled = false;
   }
 });
 
@@ -159,3 +223,6 @@ clearBtn.addEventListener("click", () => {
   templateDrop.textContent = "Drop DOCX template here or click to choose";
 });
 
+loadSettingsSummary().catch((e) => {
+  setError(e instanceof Error ? e.message : String(e));
+});

@@ -11,6 +11,32 @@
       <h1>AI Resume -> DOCX Template Automation</h1>
 
       <section class="card">
+        <h2>Provider Settings</h2>
+        <p class="hint">
+          Add your own provider keys here. The app validates each non-empty key before saving it, and blank fields keep
+          the current saved value.
+        </p>
+        <div class="settingsGrid">
+          <label class="field">
+            <span>OpenAI API Key</span>
+            <input id="openaiApiKey" type="password" autocomplete="off" placeholder="sk-..." />
+          </label>
+          <label class="field">
+            <span>Groq API Key</span>
+            <input id="groqApiKey" type="password" autocomplete="off" placeholder="gsk_..." />
+          </label>
+          <label class="field">
+            <span>OpenRouter API Key</span>
+            <input id="openrouterApiKey" type="password" autocomplete="off" placeholder="sk-or-..." />
+          </label>
+        </div>
+        <div class="row">
+          <button id="saveSettingsBtn" type="button">Validate & Save Keys</button>
+        </div>
+        <pre id="settingsStatus" class="status"></pre>
+      </section>
+
+      <section class="card">
         <h2>1) Upload Resume</h2>
         <div id="resumeDrop" class="dropzone" role="button" tabindex="0">
           Drop resume here (PDF/DOCX) or click to choose
@@ -48,4 +74,3 @@
     <script src="/app.js"></script>
   </body>
 </html>
-

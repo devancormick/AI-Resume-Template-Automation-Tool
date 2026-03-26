@@ -9,6 +9,12 @@ import { extractResumeText } from "./resumeText";
 import { extractResumeDataWithFallback } from "./aiExtract";
 import { ResumeDataSchema, type ResumeData } from "./types";
 import { renderDocxFromTemplate } from "./docxRender";
+import {
+  readProviderSettings,
+  writeProviderSettings,
+  getProviderSettingsSummary,
+  type ProviderSettings
+} from "./providerSettings";
 
 dotenv.config();
 
@@ -32,8 +38,78 @@ function buildOutputFilename(data: ResumeData): string {
   return `${lastName}_${firstName}_Prolink_Submission.docx`;
 }
 
+async function validateProviderKey(provider: "openai" | "groq" | "openrouter", apiKey: string): Promise<void> {
+  const trimmed = apiKey.trim();
+  if (!trimmed) return;
+
+  const urlByProvider = {
+    openai: "https://api.openai.com/v1/models",
+    groq: "https://api.groq.com/openai/v1/models",
+    openrouter: "https://openrouter.ai/api/v1/models"
+  } as const;
+
+  const response = await fetch(urlByProvider[provider], {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${trimmed}`
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`${provider} key is invalid (${response.status}): ${errorText}`);
+  }
+}
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get("/api/settings", async (_req, res) => {
+  try {
+    const settings = await readProviderSettings();
+    res.json({
+      providers: getProviderSettingsSummary(settings)
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    res.status(500).json({ error: msg });
+  }
+});
+
+app.post("/api/settings", async (req, res) => {
+  try {
+    const body = (req.body ?? {}) as Partial<ProviderSettings>;
+    const existingSettings = await readProviderSettings();
+    const settings: ProviderSettings = {
+      openaiApiKey:
+        typeof body.openaiApiKey === "string" && body.openaiApiKey.trim()
+          ? body.openaiApiKey.trim()
+          : existingSettings.openaiApiKey,
+      groqApiKey:
+        typeof body.groqApiKey === "string" && body.groqApiKey.trim()
+          ? body.groqApiKey.trim()
+          : existingSettings.groqApiKey,
+      openrouterApiKey:
+        typeof body.openrouterApiKey === "string" && body.openrouterApiKey.trim()
+          ? body.openrouterApiKey.trim()
+          : existingSettings.openrouterApiKey
+    };
+
+    await validateProviderKey("openai", settings.openaiApiKey);
+    await validateProviderKey("groq", settings.groqApiKey);
+    await validateProviderKey("openrouter", settings.openrouterApiKey);
+    await writeProviderSettings(settings);
+
+    res.json({
+      ok: true,
+      providers: getProviderSettingsSummary(settings)
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("Settings save error:", msg);
+    res.status(400).json({ error: msg });
+  }
 });
 
 app.get("/favicon.ico", (_req, res) => {
@@ -56,7 +132,8 @@ app.post("/api/parse", upload.single("resume"), async (req, res) => {
       return;
     }
 
-    const result = await extractResumeDataWithFallback(resumeText);
+    const settings = await readProviderSettings();
+    const result = await extractResumeDataWithFallback(resumeText, settings);
     res.json({
       ...result.data,
       _meta: {

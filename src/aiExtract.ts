@@ -1,4 +1,5 @@
 import { ResumeDataSchema, type ResumeData } from "./types";
+import { type ProviderSettings, getConfiguredProviderKeys } from "./providerSettings";
 
 type ProviderName = "openai" | "groq" | "openrouter" | "ollama";
 
@@ -59,23 +60,31 @@ function buildPrompt(resumeText: string, lastError?: string) {
   return { system, user };
 }
 
-function getProviderConfigs(): ProviderConfig[] {
+function getProviderConfigs(settings?: ProviderSettings): ProviderConfig[] {
+  const configuredKeys = getConfiguredProviderKeys(
+    settings ?? {
+      openaiApiKey: "",
+      groqApiKey: "",
+      openrouterApiKey: ""
+    }
+  );
+
   return [
     {
       name: "openai",
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: configuredKeys.openaiApiKey,
       model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
       baseURL: "https://api.openai.com/v1"
     },
     {
       name: "groq",
-      apiKey: process.env.GROQ_API_KEY,
+      apiKey: configuredKeys.groqApiKey,
       model: process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
       baseURL: "https://api.groq.com/openai/v1"
     },
     {
       name: "openrouter",
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey: configuredKeys.openrouterApiKey,
       model: process.env.OPENROUTER_MODEL ?? "meta-llama/llama-3.1-8b-instruct:free",
       baseURL: "https://openrouter.ai/api/v1",
       headers: {
@@ -91,8 +100,8 @@ function getProviderConfigs(): ProviderConfig[] {
   ];
 }
 
-function getEnabledProviders(): ProviderConfig[] {
-  return getProviderConfigs().filter((provider) => {
+function getEnabledProviders(settings?: ProviderSettings): ProviderConfig[] {
+  return getProviderConfigs(settings).filter((provider) => {
     if (provider.name === "ollama") return true;
     return isUsableApiKey(provider.apiKey);
   });
@@ -158,12 +167,12 @@ async function extractWithProvider(provider: ProviderConfig, resumeText: string)
   }
 }
 
-export async function extractResumeDataWithFallback(resumeText: string): Promise<{
+export async function extractResumeDataWithFallback(resumeText: string, settings?: ProviderSettings): Promise<{
   data: ResumeData;
   provider: ProviderName;
   model: string;
 }> {
-  const providers = getEnabledProviders();
+  const providers = getEnabledProviders(settings);
   if (providers.length === 0) {
     throw new Error("No AI provider is configured. Set OPENAI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, or run Ollama locally.");
   }
