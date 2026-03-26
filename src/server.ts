@@ -4,10 +4,9 @@ import cors from "cors";
 import morgan from "morgan";
 import multer from "multer";
 import dotenv from "dotenv";
-import OpenAI from "openai";
 
 import { extractResumeText } from "./resumeText";
-import { extractResumeDataWithOpenAI } from "./openaiExtract";
+import { extractResumeDataWithFallback } from "./aiExtract";
 import { ResumeDataSchema, type ResumeData } from "./types";
 import { renderDocxFromTemplate } from "./docxRender";
 
@@ -43,14 +42,6 @@ app.post("/api/parse", upload.single("resume"), async (req, res) => {
       res.status(400).json({ error: "Missing 'resume' file upload." });
       return;
     }
-
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      res.status(500).json({ error: "OPENAI_API_KEY is not configured." });
-      return;
-    }
-
-    const openai = new OpenAI({ apiKey });
     const resumeText = await extractResumeText({
       buffer: req.file.buffer,
       filename: req.file.originalname
@@ -61,8 +52,14 @@ app.post("/api/parse", upload.single("resume"), async (req, res) => {
       return;
     }
 
-    const parsed = await extractResumeDataWithOpenAI({ openai, resumeText });
-    res.json(parsed);
+    const result = await extractResumeDataWithFallback(resumeText);
+    res.json({
+      ...result.data,
+      _meta: {
+        provider: result.provider,
+        model: result.model
+      }
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     res.status(500).json({ error: msg });
@@ -108,4 +105,3 @@ app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${port}`);
 });
-

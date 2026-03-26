@@ -1,11 +1,11 @@
 # AI Resume -> Template Automation Tool
 
-Convert a resume (PDF or DOCX) into a recruiter-ready `.docx` submission document by extracting structured data with OpenAI and injecting it into an existing Word template.
+Convert a resume (PDF or DOCX) into a recruiter-ready `.docx` submission document by extracting structured data with an AI provider fallback chain and injecting it into an existing Word template.
 
 ## Features
 
 - Upload a resume (`.pdf` or `.docx`)
-- Extract structured data with OpenAI (JSON)
+- Extract structured data with AI provider fallback (OpenAI -> Groq -> OpenRouter -> Ollama)
 - Upload your fixed Prolink-style Word template (`.docx`)
 - Inject extracted data into template placeholders (no HTML-based layout recreation)
 - Download the generated `.docx`
@@ -31,7 +31,7 @@ Notes:
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and set your OpenAI key.
+1. Copy `.env.example` to `.env` and set at least one AI provider key, or run Ollama locally.
 2. Install dependencies.
 3. Start the server.
 
@@ -46,8 +46,18 @@ Server runs on `http://localhost:3000`.
 
 Create a `.env` file:
 
-- `OPENAI_API_KEY` (required)
-- `OPENAI_MODEL` (optional, default: `gpt-4o-mini`)
+- `OPENAI_API_KEY` / `OPENAI_MODEL` (first priority)
+- `GROQ_API_KEY` / `GROQ_MODEL` (second priority)
+- `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` (third priority)
+- `OLLAMA_BASE_URL` / `OLLAMA_MODEL` (final local fallback)
+- `OPENROUTER_SITE_URL` / `OPENROUTER_APP_NAME` (optional headers for OpenRouter)
+
+The backend tries providers in this order:
+
+1. OpenAI
+2. Groq
+3. OpenRouter
+4. Ollama
 
 ## API
 
