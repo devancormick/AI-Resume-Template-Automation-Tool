@@ -2,6 +2,8 @@
 
 Convert a resume (PDF or DOCX) into a recruiter-ready `.docx` submission document by extracting structured data with an AI provider fallback chain and injecting it into an existing Word template.
 
+Live app: `https://ai-resume-template-automation-tool.onrender.com/`
+
 ## Features
 
 - Upload a resume (`.pdf` or `.docx`)
@@ -40,7 +42,8 @@ npm install
 npm run dev
 ```
 
-Server runs on `http://localhost:3000`.
+Local server runs on `http://localhost:3000`.
+Production app runs on `https://ai-resume-template-automation-tool.onrender.com/`.
 
 ## Deploy
 
@@ -97,7 +100,7 @@ The backend tries providers in this order:
 
 Notes:
 - Set at least one cloud provider key in production unless Ollama is running on the same host.
-- Set `OPENROUTER_SITE_URL` to your real deployed URL when using OpenRouter.
+- Set `OPENROUTER_SITE_URL` to `https://ai-resume-template-automation-tool.onrender.com/` when using the current Render deployment.
 - Do not commit your real `.env` file.
 
 ## API

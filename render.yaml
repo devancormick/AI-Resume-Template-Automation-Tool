@@ -24,7 +24,7 @@ services:
       - key: OPENROUTER_MODEL
         value: meta-llama/llama-3.1-8b-instruct:free
       - key: OPENROUTER_SITE_URL
-        sync: false
+        value: https://ai-resume-template-automation-tool.onrender.com/
       - key: OPENROUTER_APP_NAME
         value: AI Resume Template Automation Tool
       - key: OLLAMA_BASE_URL

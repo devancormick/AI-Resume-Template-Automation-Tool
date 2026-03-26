@@ -2,6 +2,7 @@
   "name": "ai-resume-template-automation-tool",
   "version": "1.0.0",
   "main": "index.js",
+  "homepage": "https://ai-resume-template-automation-tool.onrender.com/",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
