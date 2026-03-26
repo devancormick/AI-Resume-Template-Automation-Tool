@@ -14,6 +14,12 @@ const settingsStatus = $("settingsStatus");
 const openaiApiKeyInput = $("openaiApiKey");
 const groqApiKeyInput = $("groqApiKey");
 const openrouterApiKeyInput = $("openrouterApiKey");
+const openaiField = $("openaiField");
+const groqField = $("groqField");
+const openrouterField = $("openrouterField");
+const openaiApiKeyHelp = $("openaiApiKeyHelp");
+const groqApiKeyHelp = $("groqApiKeyHelp");
+const openrouterApiKeyHelp = $("openrouterApiKeyHelp");
 
 let resumeFile = null;
 let templateFile = null;
@@ -24,6 +30,109 @@ function setError(msg) {
 
 function setSettingsStatus(msg) {
   settingsStatus.textContent = msg || "";
+}
+
+function setFieldState(fieldEl, helpEl, state, message) {
+  fieldEl.classList.remove("valid", "invalid");
+  if (state) {
+    fieldEl.classList.add(state);
+  }
+  helpEl.innerHTML = message;
+}
+
+function resetProviderFieldStates() {
+  setFieldState(openaiField, openaiApiKeyHelp, "", 'Enter a real OpenAI key starting with <code>sk-</code>.');
+  setFieldState(groqField, groqApiKeyHelp, "", 'Enter a Groq key starting with <code>gsk_</code>.');
+  setFieldState(openrouterField, openrouterApiKeyHelp, "", 'Enter an OpenRouter key starting with <code>sk-or-</code>.');
+}
+
+function validateKeyFormat(value, prefix) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return { ok: true, empty: true };
+  }
+
+  if (!trimmed.startsWith(prefix)) {
+    return { ok: false, empty: false, message: `Expected a key starting with <code>${prefix}</code>.` };
+  }
+
+  if (trimmed.length < prefix.length + 8) {
+    return { ok: false, empty: false, message: "This key looks too short to be valid." };
+  }
+
+  return { ok: true, empty: false };
+}
+
+function applyClientValidation() {
+  const validations = [
+    {
+      input: openaiApiKeyInput,
+      field: openaiField,
+      help: openaiApiKeyHelp,
+      prefix: "sk-",
+      idle: 'Enter a real OpenAI key starting with <code>sk-</code>.'
+    },
+    {
+      input: groqApiKeyInput,
+      field: groqField,
+      help: groqApiKeyHelp,
+      prefix: "gsk_",
+      idle: 'Enter a Groq key starting with <code>gsk_</code>.'
+    },
+    {
+      input: openrouterApiKeyInput,
+      field: openrouterField,
+      help: openrouterApiKeyHelp,
+      prefix: "sk-or-",
+      idle: 'Enter an OpenRouter key starting with <code>sk-or-</code>.'
+    }
+  ];
+
+  let hasInvalidField = false;
+
+  for (const item of validations) {
+    const result = validateKeyFormat(item.input.value, item.prefix);
+    if (result.empty) {
+      setFieldState(item.field, item.help, "", item.idle);
+      continue;
+    }
+
+    if (!result.ok) {
+      hasInvalidField = true;
+      setFieldState(item.field, item.help, "invalid", result.message);
+      continue;
+    }
+
+    setFieldState(item.field, item.help, "valid", "Looks valid. The server will verify it before saving.");
+  }
+
+  return !hasInvalidField;
+}
+
+function showProviderServerError(message) {
+  const normalized = String(message || "").toLowerCase();
+
+  if (normalized.includes("openai")) {
+    setFieldState(openaiField, openaiApiKeyHelp, "invalid", "OpenAI rejected this key. Double-check the value and try again.");
+    return true;
+  }
+
+  if (normalized.includes("groq")) {
+    setFieldState(groqField, groqApiKeyHelp, "invalid", "Groq rejected this key. Double-check the value and try again.");
+    return true;
+  }
+
+  if (normalized.includes("openrouter")) {
+    setFieldState(
+      openrouterField,
+      openrouterApiKeyHelp,
+      "invalid",
+      "OpenRouter rejected this key. Double-check the value and try again."
+    );
+    return true;
+  }
+
+  return false;
 }
 
 function tryParseJson(text) {
@@ -54,6 +163,14 @@ async function loadSettingsSummary() {
 
   setSettingsStatus(buildProviderSummary(payload.providers));
 }
+
+resetProviderFieldStates();
+
+[openaiApiKeyInput, groqApiKeyInput, openrouterApiKeyInput].forEach((input) => {
+  input.addEventListener("input", () => {
+    applyClientValidation();
+  });
+});
 
 function setupFileDrop(params) {
   const { dropEl, inputEl, onFile } = params;
@@ -108,6 +225,12 @@ saveSettingsBtn.addEventListener("click", async () => {
   setError("");
   setSettingsStatus("Validating provider keys...");
 
+  if (!applyClientValidation()) {
+    setSettingsStatus("");
+    setError("Please fix the highlighted provider key fields before saving.");
+    return;
+  }
+
   try {
     saveSettingsBtn.disabled = true;
 
@@ -131,10 +254,13 @@ saveSettingsBtn.addEventListener("click", async () => {
     openaiApiKeyInput.value = "";
     groqApiKeyInput.value = "";
     openrouterApiKeyInput.value = "";
+    resetProviderFieldStates();
     setSettingsStatus(`Saved successfully.\n${buildProviderSummary(payload.providers)}`);
   } catch (e) {
     setSettingsStatus("");
-    setError(e instanceof Error ? e.message : String(e));
+    const message = e instanceof Error ? e.message : String(e);
+    showProviderServerError(message);
+    setError(message);
   } finally {
     saveSettingsBtn.disabled = false;
   }

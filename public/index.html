@@ -17,17 +17,20 @@
           the current saved value.
         </p>
         <div class="settingsGrid">
-          <label class="field">
+          <label class="field" id="openaiField">
             <span>OpenAI API Key</span>
             <input id="openaiApiKey" type="password" autocomplete="off" placeholder="sk-..." />
+            <small id="openaiApiKeyHelp" class="fieldHelp">Enter a real OpenAI key starting with <code>sk-</code>.</small>
           </label>
-          <label class="field">
+          <label class="field" id="groqField">
             <span>Groq API Key</span>
             <input id="groqApiKey" type="password" autocomplete="off" placeholder="gsk_..." />
+            <small id="groqApiKeyHelp" class="fieldHelp">Enter a Groq key starting with <code>gsk_</code>.</small>
           </label>
-          <label class="field">
+          <label class="field" id="openrouterField">
             <span>OpenRouter API Key</span>
             <input id="openrouterApiKey" type="password" autocomplete="off" placeholder="sk-or-..." />
+            <small id="openrouterApiKeyHelp" class="fieldHelp">Enter an OpenRouter key starting with <code>sk-or-</code>.</small>
           </label>
         </div>
         <div class="row">

@@ -53,6 +53,7 @@ textarea {
   gap: 6px;
 }
 
+.field label,
 .field span {
   font-size: 14px;
   color: #374151;
@@ -63,6 +64,38 @@ textarea {
   border-radius: 10px;
   border: 1px solid #e5e7eb;
   font-size: 14px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.fieldHelp {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.field.valid input {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+
+.field.valid .fieldHelp {
+  color: #15803d;
+}
+
+.field.invalid input {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.field.invalid .fieldHelp {
+  color: #b91c1c;
 }
 
 .settingsGrid {
