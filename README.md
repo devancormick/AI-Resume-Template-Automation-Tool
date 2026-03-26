@@ -42,6 +42,42 @@ npm run dev
 
 Server runs on `http://localhost:3000`.
 
+## Deploy
+
+### Railway
+
+1. Create a new project from this repo.
+2. Set the start command to `npm run start` if Railway does not detect it automatically.
+3. Add your environment variables in Railway's Variables tab.
+4. Deploy and open `/api/health` to confirm the service is live.
+
+### Render
+
+This repo includes [`render.yaml`](/Users/administrator/Documents/Github/Devan/AI-Resume-Template-Automation-Tool/render.yaml).
+
+1. Create a new Blueprint or Web Service from the repo.
+2. Set the required secret env vars in Render.
+3. Deploy and verify `/api/health`.
+
+### Docker
+
+This repo includes [`Dockerfile`](/Users/administrator/Documents/Github/Devan/AI-Resume-Template-Automation-Tool/Dockerfile) and [`.dockerignore`](/Users/administrator/Documents/Github/Devan/AI-Resume-Template-Automation-Tool/.dockerignore).
+
+Build and run locally:
+
+```bash
+docker build -t ai-resume-template-automation-tool .
+docker run --rm -p 3000:3000 --env-file .env ai-resume-template-automation-tool
+```
+
+### VPS With PM2
+
+1. Install Node 22 and clone the repo.
+2. Run `npm install`.
+3. Create the production `.env`.
+4. Start the app with `pm2 start npm --name ai-resume-tool -- run start`.
+5. Put Nginx or Caddy in front of port `3000`.
+
 ## Environment Variables
 
 Create a `.env` file:
@@ -58,6 +94,11 @@ The backend tries providers in this order:
 2. Groq
 3. OpenRouter
 4. Ollama
+
+Notes:
+- Set at least one cloud provider key in production unless Ollama is running on the same host.
+- Set `OPENROUTER_SITE_URL` to your real deployed URL when using OpenRouter.
+- Do not commit your real `.env` file.
 
 ## API
 

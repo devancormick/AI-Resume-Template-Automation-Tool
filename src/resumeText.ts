@@ -1,5 +1,5 @@
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 
 export class ResumeTextError extends Error {
   constructor(message: string) {
@@ -16,9 +16,13 @@ export async function extractResumeText(params: {
   const lower = filename.toLowerCase();
 
   if (lower.endsWith(".pdf")) {
-    // `pdf-parse` has varying TypeScript typings depending on module settings.
-    const data = await (pdfParse as any)(buffer);
-    return (data.text ?? "").trim();
+    const parser = new PDFParse({ data: buffer });
+    try {
+      const data = await parser.getText();
+      return (data.text ?? "").trim();
+    } finally {
+      await parser.destroy();
+    }
   }
 
   if (lower.endsWith(".docx")) {
@@ -28,4 +32,3 @@ export async function extractResumeText(params: {
 
   throw new ResumeTextError(`Unsupported resume file type: ${filename}`);
 }
-

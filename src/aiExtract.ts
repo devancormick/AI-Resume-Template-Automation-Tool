@@ -10,6 +10,15 @@ type ProviderConfig = {
   headers?: Record<string, string>;
 };
 
+function isUsableApiKey(value?: string): boolean {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (trimmed.includes("your_") && trimmed.includes("_key_here")) return false;
+  if (trimmed.toLowerCase() === "changeme") return false;
+  return true;
+}
+
 function extractJsonObject(text: string): string {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
@@ -85,7 +94,7 @@ function getProviderConfigs(): ProviderConfig[] {
 function getEnabledProviders(): ProviderConfig[] {
   return getProviderConfigs().filter((provider) => {
     if (provider.name === "ollama") return true;
-    return Boolean(provider.apiKey);
+    return isUsableApiKey(provider.apiKey);
   });
 }
 

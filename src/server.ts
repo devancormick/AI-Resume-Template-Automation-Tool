@@ -36,6 +36,10 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/favicon.ico", (_req, res) => {
+  res.status(204).end();
+});
+
 app.post("/api/parse", upload.single("resume"), async (req, res) => {
   try {
     if (!req.file) {
@@ -62,6 +66,8 @@ app.post("/api/parse", upload.single("resume"), async (req, res) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
+    // Surface provider failures in the server log so config issues are easy to debug.
+    console.error("Parse error:", msg);
     res.status(500).json({ error: msg });
   }
 });
@@ -96,6 +102,7 @@ app.post("/api/format", upload.single("template"), async (req, res) => {
     res.send(docxBuffer);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
+    console.error("Format error:", msg);
     res.status(500).json({ error: msg });
   }
 });
